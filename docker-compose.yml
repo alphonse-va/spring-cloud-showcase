@@ -1,0 +1,19 @@
+version: '3.5'
+services:
+  discovery-server:
+    image: alphonse-va/infra-discovery-server
+    container_name: infra-discovery-server
+    build:
+      context: ./infra-discovery-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+
+  config-server:
+    image: alphonse-va/infra-config-server
+    container_name: infra-config-server
+    build:
+      context: ./infra-config-server
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
