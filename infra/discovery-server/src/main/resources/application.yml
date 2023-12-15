@@ -1,0 +1,31 @@
+spring:
+  cloud:
+    config:
+      enabled: false
+
+server:
+  port: ${PORT:8761}
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+  server:
+    enableSelfPreservation: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+  tracing:
+    enabled: false
+    sampling.probability: 1.0
+
+  zipkin.tracing.endpoint: ${TRACING_SERVER_URL:http://localhost:9411/api/v2/spans}
+

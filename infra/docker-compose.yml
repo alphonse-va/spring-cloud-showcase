@@ -1,0 +1,99 @@
+version: '3.5'
+services:
+
+  discovery-server:
+    image: alphonse-va/discovery-server
+    container_name: discovery-server
+    build:
+      context: ./discovery-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: "curl --fail --silent localhost:8761/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    environment:
+      - EUREKA_INSTANCE_PREFERIPADDRESS=true
+    networks:
+      - infra
+
+  admin-server:
+    image: alphonse-va/admin-server
+    container_name: admin-server
+    build:
+      context: ./admin-server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka
+      - TRACING_SERVER_URL=http://tracing-server:9411/api/v2/spans
+      - CONFIG_SERVER_URL=http://config-server:9090
+      - AUTH_SERVER=http://auth-server:6060/realms/external
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - LOGGING_FILE=/tmp/admin.log
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      auth-server:
+        condition: service_healthy
+    networks:
+      - infra
+
+  config-server:
+    image: alphonse-va/config-server
+    container_name: config-server
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka
+      - TRACING_SERVER_URL=http://tracing-server:9411/api/v2/spans
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - infra
+    volumes:
+      - ./config-server/repo:/infra/config-server/repo
+
+  auth-server:
+    container_name: auth-server
+    image: quay.io/keycloak/keycloak:23.0.1
+    ports:
+      - "6060:6060"
+    build:
+      context: ./auth-server
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: ["start-dev", "--http-port=6060", "--import-realm", "--health-enabled=true"]
+    networks:
+      - infra
+    volumes:
+      - ./auth-server:/opt/keycloak/data/import
+      - ./auth-server/keycloak-health-check.sh:/opt/keycloak/health-check.sh
+    healthcheck:
+      test: 'bash /opt/keycloak/health-check.sh'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  tracing-server:
+    image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
+    container_name: tracing-server
+    ports:
+      - 9411:9411
+    networks:
+      - infra
+
+networks:
+  infra:
+    name: infra-network
+
