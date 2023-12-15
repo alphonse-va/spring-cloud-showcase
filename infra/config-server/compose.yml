@@ -1,0 +1,24 @@
+version: '3.5'
+name: infra
+services:
+  config-server:
+    image: alphonse-va/config-server
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka
+      - TRACING_SERVER_URL=http://tracing-server:9411/api/v2/spans
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - infra
+    volumes:
+      - ./config-server/repo:/infra/config-server/repo
+
+networks:
+  infra:
+    name: infra-network

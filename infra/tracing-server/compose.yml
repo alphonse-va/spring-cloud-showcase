@@ -1,0 +1,13 @@
+version: '3.5'
+name: infra
+services:
+  tracing-server:
+    image: ghcr.io/openzipkin/zipkin-slim:${TAG:-latest}
+    ports:
+      - "9411:9411"
+    networks:
+      - infra
+
+networks:
+  infra:
+    name: infra-network

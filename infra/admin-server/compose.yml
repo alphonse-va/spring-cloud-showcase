@@ -1,0 +1,28 @@
+version: '3.5'
+name: infra
+services:
+  admin-server:
+    image: alphonse-va/admin-server
+    build:
+      context: ./admin-server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DISCOVERY_SERVER_URL=http://discovery-server:8761/eureka
+      - TRACING_SERVER_URL=http://tracing-server:9411/api/v2/spans
+      - CONFIG_SERVER_URL=http://config-server:9090
+      - AUTH_SERVER=http://auth-server:6060/realms/external
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - LOGGING_FILE=/tmp/admin.log
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+      auth-server:
+        condition: service_healthy
+    networks:
+      - infra
+
+networks:
+  infra:
+    name: infra-network

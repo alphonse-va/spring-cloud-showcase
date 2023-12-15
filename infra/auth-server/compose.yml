@@ -1,0 +1,28 @@
+version: '3.5'
+name: infra
+services:
+  auth-server:
+    image: quay.io/keycloak/keycloak:23.0.1
+    ports:
+      - "6060:6060"
+    build:
+      context: ./auth-server
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: ["start-dev", "--http-port=6060", "--import-realm", "--health-enabled=true"]
+    networks:
+      - infra
+    volumes:
+      - ./realms:/opt/keycloak/data/import
+      - ./keycloak-health-check.sh:/opt/keycloak/health-check.sh
+    healthcheck:
+      test: 'bash /opt/keycloak/health-check.sh'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+networks:
+  infra:
+    name: infra-network

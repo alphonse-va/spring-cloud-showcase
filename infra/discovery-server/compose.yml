@@ -1,0 +1,24 @@
+version: '3.5'
+name: infra
+services:
+  discovery-server:
+    image: alphonse-va/discovery-server
+    build:
+      context: ./discovery-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: "curl --fail --silent localhost:8761/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    environment:
+      - EUREKA_INSTANCE_PREFERIPADDRESS=true
+    networks:
+      - infra
+
+networks:
+  infra:
+    name: infra-network

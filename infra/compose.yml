@@ -1,0 +1,33 @@
+version: '3.5'
+name: infra
+services:
+
+  discovery-server:
+    extends:
+      file: ./discovery-server/compose.yml
+      service: discovery-server
+
+  config-server:
+    extends:
+      file: ./config-server/compose.yml
+      service: config-server
+
+  admin-server:
+    extends:
+      file: ./admin-server/compose.yml
+      service: admin-server
+
+  auth-server:
+    extends:
+      file: ./auth-server/compose.yml
+      service: auth-server
+
+  tracing-server:
+    extends:
+      file: ./tracing-server/compose.yml
+      service: tracing-server
+
+networks:
+  infra:
+    name: infra-network
+
